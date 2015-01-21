@@ -1,3 +1,6 @@
+# After https://www.ietf.org/rfc/rfc1350.txt
+#
+
 module TFTP
   class Error < Exception; end
   class ParseError < Error; end
@@ -5,6 +8,8 @@ module TFTP
   class Protocol
     OPCODES = [:rrq, :wrq, :data, :ack, :error]
     MODES = [:netascii, :octet]
+    ERRORS = [:undef, :not_found, :access_denied, :disk_full, :illegal, :wrong_uid, :file_exists, :unk_user]
+    ERRORS_SIZE = ERRORS.length - 1
 
     def tid_get; rand(65535) end
 
@@ -29,6 +34,9 @@ module TFTP
 
       case opcode = @@proto.opcode_dec(raw)
       when :rrq, :wrq
+        if payload.slice(payload.length - 1) != "\x00"
+          raise ParseError, 'Not null terminated'
+        end
         xs = payload.split("\x00")
         if xs.length != 2
           raise ParseError, "#{xs.length} elements for an #{opcode.to_s.upcase} packet"
@@ -40,7 +48,7 @@ module TFTP
         end
         return new(opcode, {:path => path, :mode => mode})
       when :data
-        seq = payload.unpack('n')
+        seq = payload.unpack('n').first
         data = payload.slice(2, payload.length - 2)
         if data.length > 512 || data.length < 1
           raise ParseError, "Exceeded payload length with #{data.length} bytes"
@@ -50,8 +58,18 @@ module TFTP
         if payload.length != 2
           raise ParseError, "Exceeded payload length with #{payload.length} bytes"
         end
-        seq = payload.unpack('n')
+        seq = payload.unpack('n').first
         return new(opcode, {:seq => seq})
+      when :error
+        if payload.slice(payload.length - 1) != "\x00"
+          raise ParseError, 'Not null terminated'
+        end
+        code = payload.unpack('n').first
+        if code < 0 || code > Protocol::ERRORS_SIZE
+          rase ParseError, "Unknown error code #{code.isnpect}"
+        end
+        msg = payload.slice(2, payload.length - 3)
+        return new(opcode, {:code => code, :msg => msg})
       else
         raise ParseError, "Unknown opcode '#{raw.slice(0, 2).inspect}'"
       end

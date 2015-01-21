@@ -15,6 +15,7 @@ class Packet < Minitest::Test
                  TFTP::Packet.parse("\x00\x01binary\x00OCTET\x00")
 
 
+    assert_raises(TFTP::ParseError) { TFTP::Packet.parse("\x00\x01\x00\x00") }
     assert_raises(TFTP::ParseError) { TFTP::Packet.parse("\x00\x01\x00\x00\x00") }
     assert_raises(TFTP::ParseError) { TFTP::Packet.parse("\x00\x01a\x00c\x00c\x00") }
     assert_raises(TFTP::ParseError) { TFTP::Packet.parse("\x00\x01foo\x00bar\x00") }
@@ -51,5 +52,13 @@ class Packet < Minitest::Test
                  TFTP::Packet.parse("\x00\x04\x00\x00")
     assert_equal TFTP::Packet.new(:ack, {:seq => 65534}),
                  TFTP::Packet.parse("\x00\x04\xfb\xb2")
+
+
+    assert_raises(TFTP::ParseError) { TFTP::Packet.parse("\x00\x04\x00") }
+    assert_raises(TFTP::ParseError) { TFTP::Packet.parse("\x00\x04\x00" + ('A' * 8)) }
+  end
+
+  def test_parse_error
+    assert_raises(TFTP::ParseError) { TFTP::Packet.parse("\x00\x05\x00\xff") }
   end
 end
