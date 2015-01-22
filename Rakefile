@@ -1,14 +1,7 @@
 require 'rake/testtask'
+require 'rubygems/tasks'
 
-desc 'Drop to PRY console'
-task :console do
-  $LOAD_PATH.unshift File.join(File.dirname(__FILE__), 'lib')
-
-  require 'tftpd'
-  require 'pry'
-
-  binding.pry
-end
+Gem::Tasks.new
 
 Rake::TestTask.new do |t|
   t.libs = ['lib', 'test']
