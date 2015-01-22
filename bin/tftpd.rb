@@ -8,10 +8,10 @@ require 'logger'
 
 PORT = ARGV.first.to_i < 1 ? 69 : ARGV.shift.to_i
 PATH = ARGV.shift || Dir.pwd
-HOST = ARGV.shift
+HOST = ARGV.shift || '127.0.0.1'
 
 log = Logger.new(STDOUT)
-log.level = Logger::DEBUG
+log.level = Logger::INFO
 log.formatter = lambda {|s, d, p, m| "#{s.ljust(5)} | #{m}\n" }
 
 begin

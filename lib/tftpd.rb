@@ -94,7 +94,7 @@ module TFTP
               log :warn, "#{tag} Timeout at block ##{seq}"
               return
             end
-            msg, _ = sock.recvfrom(4)
+            msg, _ = sock.recvfrom(4, 0)
             pkt = Packet.parse(msg)
             if pkt.class != Packet::ACK
               log :warn, "#{tag} Expected ACK but got: #{pkt.class}"
@@ -233,9 +233,9 @@ module TFTP
 
           log :debug, "#{tag} -> PKT: #{pkt.inspect}"
           tid = get_tid
+          tag = "[#{addr.ip_address}:#{addr.ip_port.to_s.ljust(5)}:#{tid.to_s.ljust(5)}]"
           sock = addr.connect_from(@host, tid)
           @clients[tid] = tag
-          log :debug, "#{tag} -> TID: #{tid}"
 
           unless pkt.is_a?(Packet::RRQ) || pkt.is_a?(Packet::WRQ)
             log :warn, "#{tag} Bad initial packet: #{pkt.class}"
