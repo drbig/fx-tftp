@@ -51,7 +51,7 @@ module TFTP
       when 1, 2 # rrq, wrq
         raise ParseError, 'Not null terminated' if payload.slice(payload.length - 1) != "\x00"
         xs = payload.split("\x00")
-        raise ParseError, 'Two many elements' if xs.length != 2
+        raise ParseError, "Not enough elements: #{xs.inspect}" if xs.length < 2
         filename = xs[0]
         mode = xs[1].downcase.to_sym
         raise ParseError, "Unknown mode '#{xs[1].inspect}'" unless [:netascii, :octet].member? mode
@@ -106,7 +106,7 @@ module TFTP
             end
             seq += 1
           end
-        rescue PacketError => e
+        rescue ParseError => e
           log :warn, "#{tag} Packet parse error: #{e.to_s}"
           return
         end
@@ -137,7 +137,7 @@ module TFTP
             break if pkt.last?
             seq += 1
           end
-        rescue PacketError => e
+        rescue ParseError => e
           log :warn, "#{tag} Packet parse error: #{e.to_s}"
           return false
         end
@@ -226,7 +226,7 @@ module TFTP
 
           begin
             pkt = Packet.parse(msg)
-          rescue PacketError => e
+          rescue ParseError => e
             log :warn, "#{tag} Packet parse error: #{e.to_s}"
             next
           end
