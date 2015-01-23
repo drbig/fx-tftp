@@ -1,11 +1,20 @@
 require 'rake/testtask'
-require 'rubygems/tasks'
-require 'yard'
 
-Gem::Tasks.new
-YARD::Rake::YardocTask.new
+begin
+  require 'rubygems/tasks'
+  Gem::Tasks.new
+rescue LoadError => e
+  warn e.message
+end
 
-task :doc => :yard
+begin
+  require 'yard'
+  YARD::Rake::YardocTask.new
+  task :doc => :yard
+rescue LoadError => e
+  warn e.message
+end
+
 task :default => :test
 
 Rake::TestTask.new do |t|
