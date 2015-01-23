@@ -4,40 +4,56 @@
 require 'socket'
 
 module TFTP
+  # TFTP-specific errors.
   class Error < Exception; end
+  # Packet parsing exception.
   class ParseError < Error; end
 
+  # Packet can parse a binary string into a lightweight object representation.
   module Packet
+    # Base is a thin layer over a Struct.
     class Base < Struct
+      # Encode the packet back to binary string.
+      # It uses the #to_str method to properly format each packet, and then forces
+      # 8bit encoding.
       def encode; to_str.force_encoding('ascii-8bit'); end
     end
 
+    # Read Request
     RRQ = Base.new(:filename, :mode)
     class RRQ
+      # Convert to binary string.
       def to_str; "\x00\x01" + self.filename + "\x00" + self.mode.to_s + "\x00"; end
     end
 
+    # Write Request
     WRQ = Base.new(:filename, :mode)
     class WRQ
       def to_str; "\x00\x02" + self.filename + "\x00" + self.mode.to_s + "\x00"; end
     end
 
+    # Data
     DATA = Base.new(:seq, :data)
     class DATA
       def to_str; "\x00\x03" + [self.seq].pack('n') + self.data; end
+      # Check if this is the last data packet for this session.
       def last?; self.data.length < 512; end
     end
 
+    # Acknowledgement
     ACK = Base.new(:seq)
     class ACK
       def to_str; "\x00\x04" + [self.seq].pack('n'); end
     end
 
+    # Error
     ERROR = Base.new(:code, :msg)
     class ERROR
       def to_str; "\x00\x05" + [self.code].pack('n') + self.msg + "\x00"; end
     end
 
+    # Parse a binary string into a packet.
+    # Does some sanity checking, can raise a ParseError.
     def self.parse(data)
       data = data.force_encoding('ascii-8bit')
 
@@ -76,14 +92,33 @@ module TFTP
     end
   end
 
+  # Handlers implement session-handling logic.
   module Handler
+    # Base handler contains the common methods for real handlers.
     class Base
+      # Initialize the handler.
+      #
+      # Options:
+      #
+      #  - :logger  => logger object (e.g. a Logger instance)
+      #  - :timeout => used while waiting for next DATA/ACK packets (default: 5s)
+      #
+      # All given options are saved in @opts.
+      #
+      # @param opts [Hash] Options
       def initialize(opts = {})
         @logger = opts[:logger]
         @timeout = opts[:timeout] || 5
         @opts = opts
       end
 
+      # Send data over an established connection.
+      #
+      # Doesn't close neither sock nor io.
+      #
+      # @param tag  [String]    Tag used for logging
+      # @param sock [UDPSocket] Connected socket
+      # @param io   [IO]        Object to send data from
       def send(tag, sock, io)
         seq = 1
         begin
@@ -113,6 +148,15 @@ module TFTP
         log :info, "#{tag} Sent file"
       end
 
+      # Receive data over an established connection.
+      #
+      # Doesn't close neither sock nor io.
+      # Returns true if whole file has been received, false otherwise.
+      #
+      # @param tag  [String]    Tag used for logging
+      # @param sock [UDPSocket] Connected socket
+      # @param io   [IO]        Object to write data to
+      # @return [Boolean]
       def recv(tag, sock, io)
         sock.send(Packet::ACK.new(0).encode, 0)
         seq = 1
@@ -151,12 +195,24 @@ module TFTP
       end
     end
 
+    # Basic read-write session over a 'physical' directory.
     class RWSimple < Base
+      # @param path [String] Path to serving root directory
       def initialize(path, opts = {})
         @path = path
         super(opts)
       end
 
+      # Handle a session.
+      #
+      # Has to close the socket (and any other resources).
+      # Note that the current version 'guards' against path traversal by a simple
+      # substitution of '..' with '__'.
+      #
+      # @param tag  [String]    Tag used for logging
+      # @param req  [Packet]    The initial request packet
+      # @param sock [UDPSocket] Connected socket
+      # @param src  [UDPSource] Initial connection information
       def run!(tag, req, sock, src)
         name = req.filename.gsub('..', '__')
         path = File.join(@path, name)
@@ -199,14 +255,34 @@ module TFTP
     end
   end
 
+  # Servers customize the Basic server and perhaps combine it with a handler.
   module Server
+    # Basic server utilizing threads for handling sessions.
+    #
+    # It lacks a mutex around access to @clients, in case you'd want to stress
+    # test it for 10K or something.
+    #
+    # @attr handler [Handler] Session handler
+    # @attr host    [String]  Host the sockets bind to
+    # @attr port    [Integer] Session dispatcher port
+    # @attr clients [Hash]    Current sessions
     class Base
       attr_reader :handler, :host, :port, :clients
 
+      # Initialize the server.
+      #
+      # Options:
+      # 
+      #  - :host   => host to bind to (default: 127.0.0.1)
+      #  - :port   => dispatcher port (default: 69)
+      #  - :logger => logger instance
+      #
+      # @param handler  [Handler]  Initialized session handler
+      # @param opts     [Hash]     Options
       def initialize(handler, opts = {})
         @handler = handler
 
-        @host = opts[:host] || '0.0.0.0'
+        @host = opts[:host] || '127.0.0.1'
         @port = opts[:port] || 69
         @logger = opts[:logger]
 
@@ -214,6 +290,9 @@ module TFTP
         @run = false
       end
 
+      # Run the main server loop.
+      #
+      # This is obviously blocking.
       def run!
         log :info, "UDP server loop at #{@host}:#{@port}"
         @run = true
@@ -253,6 +332,9 @@ module TFTP
         log :info, 'UDP server loop has stopped'
       end
 
+      # Stop the main server loop.
+      #
+      # This will allow the currently pending sessions to finish.
       def stop
         log :info, 'Stopping UDP server loop'
         @run = false
@@ -260,6 +342,11 @@ module TFTP
       end
 
       private
+      # Get the server's TID.
+      #
+      # The TID is basically a random port number we will use for a session.
+      # This actually tries to get a unique TID per session.
+      # It uses only ports 1024 - 65535 as not to require root.
       def get_tid
         tid = 1024 + rand(64512)
         tid = 1024 + rand(64512) while @clients.has_key? tid
@@ -271,6 +358,9 @@ module TFTP
       end
     end
 
+    # Basic read-write TFTP server.
+    #
+    # This is what most other TFTPd implementations give you.
     class RWSimple < Base
       def initialize(path, opts = {})
         handler = Handler::RWSimple.new(path, opts)
