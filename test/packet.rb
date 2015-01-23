@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'minitest/autorun'
-require 'tftpd'
+require 'tftp'
 
 class Packet < Minitest::Test
   def test_parse_rrq

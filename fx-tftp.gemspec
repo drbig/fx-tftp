@@ -1,7 +1,7 @@
 # coding: utf-8
 #
 
-require File.expand_path('../lib/version', __FILE__)
+require File.expand_path('../lib/tftp/version', __FILE__)
 
 Gem::Specification.new do |s|
   s.name          = 'fx-tftp'
@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.date          = Time.now
 
   s.summary       = %q{Hackable and ACTUALLY WORKING pure-Ruby TFTP server}
-  s.description   = %q{Got carried away a bit with the OOness of the whole thing, so while it will be not the fastest TFTP server it might be the most flexible, at least for pure-Ruby ones.}
+  s.description   = %q{Got carried away a bit with the OOness of the whole thing, so while it won't be the fastest TFTP server it might be the most flexible, at least for pure-Ruby ones. With all the infastructure already in place adding a client should be a breeze, should anyone need it.}
   s.license       = 'BSD'
   s.authors       = ['Piotr S. Staszewski']
   s.email         = 'p.staszewski@gmail.com'
