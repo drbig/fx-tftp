@@ -1,7 +1,12 @@
 require 'rake/testtask'
 require 'rubygems/tasks'
+require 'yard'
 
 Gem::Tasks.new
+YARD::Rake::YardocTask.new
+
+task :doc => :yard
+task :default => :test
 
 Rake::TestTask.new do |t|
   t.libs = ['lib', 'test']
