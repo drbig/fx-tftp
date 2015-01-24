@@ -197,7 +197,15 @@ module TFTP
 
     # Basic read-write session over a 'physical' directory.
     class RWSimple < Base
-      # @param path [String] Path to serving root directory
+      # Initialize the handler.
+      #
+      # Options:
+      #
+      #  - :no_read  => deny read access if true
+      #  - :no_write => deny write access if true
+      #
+      # @param path [String]  Path to serving root directory
+      # @param opts [Hash]    Options
       def initialize(path, opts = {})
         @path = path
         super(opts)
@@ -219,6 +227,12 @@ module TFTP
 
         case req
         when Packet::RRQ
+          if @opts[:no_read]
+            log :info, "#{tag} Denied read request for #{req.filename}"
+            sock.send(Packet::ERROR.new(2, 'Access denied.').encode, 0)
+            sock.close
+            return
+          end
           log :info, "#{tag} Read request for #{req.filename} (#{req.mode})"
           unless File.exist? path
             log :warn, "#{tag} File not found"
@@ -233,6 +247,12 @@ module TFTP
           sock.close
           io.close
         when Packet::WRQ
+          if @opts[:no_write]
+            log :info, "#{tag} Denied write request for #{req.filename}"
+            sock.send(Packet::ERROR.new(2, 'Access denied.').encode, 0)
+            sock.close
+            return
+          end
           log :info, "#{tag} Write request for #{req.filename} (#{req.mode})"
           if File.exist? path
             log :warn, "#{tag} File already exist"
