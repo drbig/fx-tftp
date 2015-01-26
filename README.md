@@ -16,13 +16,6 @@ The included `tftpd` executable gives you a fully-fledged read-write TFTP server
 Suppose we want to have a TFTP server that only supports reading, but the files served should depend on the IP block the client is connecting from:
 
     class CustomHandler < TFTP::Handler::RWSimple
-      def run!(tag, req, sock, src)
-        if req.is_a? TFTP::Packet::WRQ
-          sock.send(TFTP::Packet::ERROR.new(4, 'Nope').encode, 0)
-          sock.close
-          return
-        end
-    
         ip = src.remote_address.ip_address.split('.')
         block = ip.slice(0, 3).join('-')
         req.filename = File.join(block, req.filename)
@@ -31,7 +24,7 @@ Suppose we want to have a TFTP server that only supports reading, but the files 
       end
     end
     
-    srv = TFTP::Server::Base.new(CustomHandler.new(path), opts)
+    srv = TFTP::Server::Base.new(CustomHandler.new(path, :no_write => true), opts)
 
 When you combine filename inspection and `#send` and `#recv` methods working on plain `IO` objects you can easily whip up things like serving dynamically built scripts/binaries/archives based on parameters passed as the requested 'filename'.
 
@@ -43,6 +36,7 @@ When you combine filename inspection and `#send` and `#recv` methods working on 
         -d, --debug                      Enable debug output
         -l, --log PATH                   Log to file
         -b, --background                 Fork into background
+        -m, --mode MODE                  Run in R/W only mode
         -h, --host HOST                  Bind do host
         -p, --path PATH                  Serving root directory
 
