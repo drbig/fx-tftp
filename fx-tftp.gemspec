@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.homepage      = 'https://github.com/drbig/fx-tftp'
 
   s.files         = `git ls-files`.split("\n")
+  s.executables   = ['tftpd']
   s.test_files    = s.files.grep(%r{^test/})
   s.require_paths = ['lib']
 
