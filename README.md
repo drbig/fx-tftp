@@ -39,6 +39,7 @@ When you combine filename inspection and `#send` and `#recv` methods working on 
         -m, --mode MODE                  Run in R/W only mode
         -h, --host HOST                  Bind do host
         -p, --path PATH                  Serving root directory
+        -o, --overwrite                  Overwrite existing files
 
 ## Contributing
 

@@ -34,6 +34,7 @@ op = OptionParser.new do |o|
   end
   o.on('-h', '--host HOST', String, 'Bind do host')           {|a| config[:host]      = a }
   o.on('-p', '--path PATH', String, 'Serving root directory') {|a| config[:path]      = a }
+  o.on('-o', '--overwrite', 'Overwrite existing files')       { config[:overwrite]    = true }
 end
 op.parse! or die!(op)
 die!(op) if config[:bad_mode]
