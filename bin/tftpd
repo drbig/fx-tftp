@@ -9,7 +9,7 @@ require 'tftp'
 
 config = {:path => Dir.pwd, :host => '127.0.0.1', :fork => false,
           :ver => false, :loglevel => Logger::INFO, :logfile => STDOUT,
-          :no_read => false, :no_write => false}
+          :no_read => false, :no_write => false, :overwrite => false}
 
 def die!(msg)
   STDERR.puts msg
@@ -34,7 +34,7 @@ op = OptionParser.new do |o|
   end
   o.on('-h', '--host HOST', String, 'Bind do host')           {|a| config[:host]      = a }
   o.on('-p', '--path PATH', String, 'Serving root directory') {|a| config[:path]      = a }
-  o.on('-o', '--overwrite', 'Overwrite existing files')       { config[:overwrite]    = true }
+  o.on('-o', '--overwrite', 'Overwrite existing files')       {    config[:overwrite] = true }
 end
 op.parse! or die!(op)
 die!(op) if config[:bad_mode]
