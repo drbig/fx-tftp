@@ -141,6 +141,7 @@ module TFTP
             end
             seq += 1
           end
+          sock.send(Packet::DATA.new(seq, '').encode, 0) if io.size % 512 == 0
         rescue ParseError => e
           log :warn, "#{tag} Packet parse error: #{e.to_s}"
           return
