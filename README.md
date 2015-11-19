@@ -54,4 +54,4 @@ Fell free to contributed patches using the common GitHub model (descried below).
 
 Standard two-clause BSD license, see LICENSE.txt for details.
 
-Copyright (c) 2015 Piotr S. Staszewski
+Copyright © 2015 Piotr S. Staszewski
