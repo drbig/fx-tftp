@@ -255,16 +255,6 @@ module TFTP
             return
           end
           log :info, "#{tag} Write request for #{req.filename} (#{req.mode})"
-          if File.exist? path
-            if @opts[:overwrite]
-              log :info, "#{tag} Overwrite existing file #{req.filename}"
-            else
-              log :warn, "#{tag} Refuse to overwrite existing file #{req.filename}"
-              sock.send(Packet::ERROR.new(6, 'File already exists.').encode, 0)
-              sock.close
-              return
-            end
-          end
           mode = 'w'
           mode += 'b' if req.mode == :octet
           io = File.open(path, mode)
