@@ -32,6 +32,10 @@ end
 config[:path] = op.parse!.first
 abort 'Last argument must be a directory' unless File.directory? config[:path]
 
+if config[:port] < 1024 && !Process.euid.zero?
+  abort 'Please run tftpd as root via sudo!'
+end
+
 log = Logger.new(STDOUT)
 log.level = config[:loglevel]
 log.formatter = lambda do |s, d, p, m|
