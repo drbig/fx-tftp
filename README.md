@@ -61,6 +61,7 @@ Fell free to contributed patches using the common GitHub model (descried below).
  - Write code and tests, check, commit
  - Make a Pull Request
 
+
 ## Licensing
 
 Standard two-clause BSD license, see LICENSE.txt for details.
