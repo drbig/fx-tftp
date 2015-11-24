@@ -19,7 +19,7 @@ op = OptionParser.new do |o|
     'Address to listen on (default: 0.0.0.0)' do |address|
     config[:address] = address
   end
-  o.on '-p', '--port PORT', String,
+  o.on '-p', '--port PORT', Integer,
     'Port to listen on (default: 69)' do |port|
     abort 'Invalid port' if port < 1 || port > 65535
     config[:port] = port
@@ -29,7 +29,7 @@ op = OptionParser.new do |o|
   end
 end
 
-config[:path] = op.parse!
+config[:path] = op.parse!.first
 abort 'Last argument must be a directory' unless File.directory? config[:path]
 
 log = Logger.new(STDOUT)
