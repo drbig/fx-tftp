@@ -34,7 +34,6 @@ When you combine filename inspection and `#send` and `#recv` methods working on 
     Usage: tftpd [OPTIONS] PORT
         -v, --version                    Show version and exit
         -d, --debug                      Enable debug output
-        -l, --log PATH                   Log to file
         -m, --mode MODE                  Run in R/W only mode
         -a, --address ADDRESS            Listen on this address (default: 0.0.0.0)
         -p, --path PATH                  Serving root directory
