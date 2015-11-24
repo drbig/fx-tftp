@@ -6,9 +6,8 @@ require 'logger'
 require 'optparse'
 require 'tftp'
 
-config = {:port => 69, :address => '0.0.0.0',
-          :loglevel => Logger::INFO,
-          :no_read => false, :no_write => false}
+# Defaults
+config = { :port => 69, :address => '0.0.0.0', :loglevel => Logger::INFO }
 
 def die!(msg)
   STDERR.puts msg
@@ -22,16 +21,6 @@ op = OptionParser.new do |o|
     exit
   end
   o.on('-d', '--debug', 'Enable debug output')                {    config[:loglevel]  = Logger::DEBUG }
-  o.on('-m', '--mode MODE', String, 'Run in R/W only mode')   do |a|
-    case a.downcase[0]
-    when 'r'
-      config[:no_write] = true
-    when 'w'
-      config[:no_read]  = true
-    else
-      config[:bad_mode] = true
-    end
-  end
   o.on('-a', '--address ADDRESS', String, 'Address to listen on (default: 0.0.0.0)') {|a| config[:address] = a }
   o.on('-p', '--port PORT', String, 'Port to listen on (default: 69)') do |port|
     die!('Invalid port') if port < 1 || port > 65535
@@ -39,7 +28,6 @@ op = OptionParser.new do |o|
   end
 end
 op.parse! or die!(op)
-die!(op) if config[:bad_mode]
 
 config[:path] = ARGV.shift.to_i
 die!('Serving root does not exists') unless File.exists? config[:path]
