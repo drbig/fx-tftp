@@ -6,7 +6,7 @@ require 'logger'
 require 'optparse'
 require 'tftp'
 
-config = {:path => Dir.pwd, :host => '127.0.0.1', :fork => false,
+config = {:path => Dir.pwd, :address => '0.0.0.0', :fork => false,
           :ver => false, :loglevel => Logger::INFO, :logfile => STDOUT,
           :no_read => false, :no_write => false}
 
@@ -31,7 +31,7 @@ op = OptionParser.new do |o|
       config[:bad_mode] = true
     end
   end
-  o.on('-h', '--host HOST', String, 'Bind do host')           {|a| config[:host]      = a }
+  o.on('-a', '--address ADDRESS', String, 'Listen on this address (default: 0.0.0.0)') {|a| config[:address] = a }
   o.on('-p', '--path PATH', String, 'Serving root directory') {|a| config[:path]      = a }
 end
 op.parse! or die!(op)

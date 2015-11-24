@@ -37,7 +37,7 @@ When you combine filename inspection and `#send` and `#recv` methods working on 
         -l, --log PATH                   Log to file
         -b, --background                 Fork into background
         -m, --mode MODE                  Run in R/W only mode
-        -h, --host HOST                  Bind do host
+        -a, --address ADDRESS            Listen on this address (default: 0.0.0.0)
         -p, --path PATH                  Serving root directory
 
 ## Contributing
