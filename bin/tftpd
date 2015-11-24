@@ -9,33 +9,34 @@ require 'tftp'
 # Defaults
 config = { :port => 69, :address => '0.0.0.0', :loglevel => Logger::INFO }
 
-def die!(msg)
-  STDERR.puts msg
-  exit(2)
-end
-
 op = OptionParser.new do |o|
   o.banner = "Usage: #{$PROGRAM_NAME} [OPTIONS] DIR"
-  o.on('-V', '--version', 'Show version and exit') do
+  o.on '-V', '--version', 'Show version and exit' do
     puts "fx-tftpd v#{TFTP::VERSION} Copyright (c) 2015, Piotr S. Staszewski"
     exit
   end
-  o.on('-d', '--debug', 'Enable debug output')                {    config[:loglevel]  = Logger::DEBUG }
-  o.on('-a', '--address ADDRESS', String, 'Address to listen on (default: 0.0.0.0)') {|a| config[:address] = a }
-  o.on('-p', '--port PORT', String, 'Port to listen on (default: 69)') do |port|
-    die!('Invalid port') if port < 1 || port > 65535
+  o.on '-d', '--debug', 'Enable debug output' do
+    config[:loglevel] = Logger::DEBUG
+  end
+  o.on '-a', '--address ADDRESS', String,
+    'Address to listen on (default: 0.0.0.0)' do |address|
+    config[:address] = address
+  end
+  o.on '-p', '--port PORT', String,
+    'Port to listen on (default: 69)' do |port|
+    abort 'Invalid port' if port < 1 || port > 65535
     config[:port] = port
   end
 end
-op.parse! or die!(op)
 
-config[:path] = ARGV.shift.to_i
-die!('Serving root does not exists') unless File.exists? config[:path]
+config[:path] = op.parse!
+abort 'Last argument must be a directory' unless File.directory? config[:path]
 
 log = Logger.new(STDOUT)
 log.level = config[:loglevel]
-log.formatter = lambda {|s, d, p, m| "#{d.strftime('%Y-%m-%d %H:%M:%S.%3N')} | #{s.ljust(5)} | #{m}\n" }
-
+log.formatter = lambda do |s, d, p, m|
+  "#{d.strftime('%Y-%m-%d %H:%M:%S.%3N')} | #{s.ljust(5)} | #{m}\n"
+end
 config[:logger] = log
 
 begin
