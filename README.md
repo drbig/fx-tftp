@@ -33,9 +33,9 @@ When you combine filename inspection and `#send` and `#recv` methods working on 
     $ tftpd
     Usage: tftpd [OPTIONS] DIR
         -V, --version                    Show version and exit
-        -d, --debug                      Enable debug output
         -a, --address ADDRESS            Address to listen on (default: 0.0.0.0)
         -p, --port PORT                  Port to listen on (default: 69)
+        -v, --verbose                    Enable verbose output
 
 ## Contributing
 

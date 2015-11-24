@@ -7,16 +7,13 @@ require 'optparse'
 require 'tftp'
 
 # Defaults
-config = { :port => 69, :address => '0.0.0.0', :loglevel => Logger::INFO }
+config = { :port => 69, :address => '0.0.0.0', :loglevel => Logger::WARN }
 
 op = OptionParser.new do |o|
   o.banner = "Usage: #{$PROGRAM_NAME} [OPTIONS] DIR"
   o.on '-V', '--version', 'Show version and exit' do
     puts "fx-tftpd v#{TFTP::VERSION} Copyright (c) 2015, Piotr S. Staszewski"
     exit
-  end
-  o.on '-d', '--debug', 'Enable debug output' do
-    config[:loglevel] = Logger::DEBUG
   end
   o.on '-a', '--address ADDRESS', String,
     'Address to listen on (default: 0.0.0.0)' do |address|
@@ -26,6 +23,9 @@ op = OptionParser.new do |o|
     'Port to listen on (default: 69)' do |port|
     abort 'Invalid port' if port < 1 || port > 65535
     config[:port] = port
+  end
+  o.on '-v', '--verbose', 'Enable verbose output' do
+    config[:loglevel] = Logger::INFO
   end
 end
 
