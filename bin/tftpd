@@ -7,7 +7,7 @@ require 'optparse'
 require 'tftp'
 
 config = {:path => Dir.pwd, :address => '0.0.0.0',
-          :ver => false, :loglevel => Logger::INFO, :logfile => STDOUT,
+          :loglevel => Logger::INFO, :logfile => STDOUT,
           :no_read => false, :no_write => false}
 
 def die!(msg)
@@ -17,7 +17,10 @@ end
 
 op = OptionParser.new do |o|
   o.banner = "Usage: #{$PROGRAM_NAME} [OPTIONS] PORT"
-  o.on('-v', '--version', 'Show version and exit')            {    config[:ver]       = true }
+  o.on('-V', '--version', 'Show version and exit') do
+    puts "fx-tftpd v#{TFTP::VERSION} Copyright (c) 2015, Piotr S. Staszewski"
+    exit
+  end
   o.on('-d', '--debug', 'Enable debug output')                {    config[:loglevel]  = Logger::DEBUG }
   o.on('-l', '--log PATH',  String, 'Log to file')            {|a| config[:logfile]   = a }
   o.on('-m', '--mode MODE', String, 'Run in R/W only mode')   do |a|
@@ -35,11 +38,6 @@ op = OptionParser.new do |o|
 end
 op.parse! or die!(op)
 die!(op) if config[:bad_mode]
-
-if config[:ver]
-  puts "fx-tftpd v#{TFTP::VERSION} Copyright (c) 2015, Piotr S. Staszewski"
-  exit
-end
 
 die!('Serving root does not exists') unless File.exists? config[:path]
 
