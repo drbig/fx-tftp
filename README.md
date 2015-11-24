@@ -31,12 +31,12 @@ When you combine filename inspection and `#send` and `#recv` methods working on 
 ## Included executable
 
     $ tftpd
-    Usage: tftpd [OPTIONS] PORT
-        -v, --version                    Show version and exit
+    Usage: tftpd [OPTIONS] DIR
+        -V, --version                    Show version and exit
         -d, --debug                      Enable debug output
         -m, --mode MODE                  Run in R/W only mode
-        -a, --address ADDRESS            Listen on this address (default: 0.0.0.0)
-        -p, --path PATH                  Serving root directory
+        -a, --address ADDRESS            Address to listen on (default: 0.0.0.0)
+        -p, --port PORT                  Port to listen on (default: 69)
 
 ## Contributing
 
