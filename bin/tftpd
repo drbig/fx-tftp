@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-#
 
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
@@ -7,59 +6,42 @@ require 'logger'
 require 'optparse'
 require 'tftp'
 
-config = {:path => Dir.pwd, :host => '127.0.0.1', :fork => false,
-          :ver => false, :loglevel => Logger::INFO, :logfile => STDOUT,
-          :no_read => false, :no_write => false, :overwrite => false}
-
-def die!(msg)
-  STDERR.puts msg
-  exit(2)
-end
+# Defaults
+config = { :port => 69, :address => '0.0.0.0', :loglevel => Logger::WARN }
 
 op = OptionParser.new do |o|
-  o.banner = "Usage: #{$PROGRAM_NAME} [OPTIONS] PORT"
-  o.on('-v', '--version', 'Show version and exit')            {    config[:ver]       = true }
-  o.on('-d', '--debug', 'Enable debug output')                {    config[:loglevel]  = Logger::DEBUG }
-  o.on('-l', '--log PATH',  String, 'Log to file')            {|a| config[:logfile]   = a }
-  o.on('-b', '--background', 'Fork into background')          {|a| config[:fork]      = true }
-  o.on('-m', '--mode MODE', String, 'Run in R/W only mode')   do |a|
-    case a.downcase[0]
-    when 'r'
-      config[:no_write] = true
-    when 'w'
-      config[:no_read]  = true
-    else
-      config[:bad_mode] = true
-    end
+  o.banner = "Usage: #{$PROGRAM_NAME} [OPTIONS] DIR"
+  o.on '-V', '--version', 'Show version and exit' do
+    puts "fx-tftpd v#{TFTP::VERSION} Copyright (c) 2015, Piotr S. Staszewski"
+    exit
   end
-  o.on('-h', '--host HOST', String, 'Bind do host')           {|a| config[:host]      = a }
-  o.on('-p', '--path PATH', String, 'Serving root directory') {|a| config[:path]      = a }
-  o.on('-o', '--overwrite', 'Overwrite existing files')       {    config[:overwrite] = true }
+  o.on '-a', '--address ADDRESS', String,
+    'Address to listen on (default: 0.0.0.0)' do |address|
+    config[:address] = address
+  end
+  o.on '-p', '--port PORT', Integer,
+    'Port to listen on (default: 69)' do |port|
+    abort 'Invalid port' if port < 1 || port > 65535
+    config[:port] = port
+  end
+  o.on '-v', '--verbose', 'Enable verbose output' do
+    config[:loglevel] = Logger::INFO
+  end
 end
-op.parse! or die!(op)
-die!(op) if config[:bad_mode]
 
-if config[:ver]
-  puts "fx-tftpd v#{TFTP::VERSION} Copyright (c) 2015, Piotr S. Staszewski"
-  exit
+config[:path] = op.parse!.first
+abort 'Last argument must be a directory' unless File.directory? config[:path]
+
+if config[:port] < 1024 && !Process.euid.zero?
+  abort 'Please run tftpd as root via sudo!'
 end
 
-die!('Serving root does not exists') unless File.exists? config[:path]
-
-PORT = ARGV.shift.to_i
-die!(op) if PORT < 1 || PORT > 65535
-
-log = Logger.new(config[:logfile])
+log = Logger.new(STDOUT)
 log.level = config[:loglevel]
-log.formatter = lambda {|s, d, p, m| "#{d.strftime('%Y-%m-%d %H:%M:%S.%3N')} | #{s.ljust(5)} | #{m}\n" }
-
-if config[:fork]
-  log.info 'Detaching from the console'
-  Process.daemon(true)
+log.formatter = lambda do |s, d, p, m|
+  "#{d.strftime('%Y-%m-%d %H:%M:%S.%3N')} | #{s.ljust(5)} | #{m}\n"
 end
-
 config[:logger] = log
-config[:port]   = PORT
 
 begin
   log.info "Serving from and to #{config[:path]}"

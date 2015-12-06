@@ -255,16 +255,6 @@ module TFTP
             return
           end
           log :info, "#{tag} Write request for #{req.filename} (#{req.mode})"
-          if File.exist? path
-            if @opts[:overwrite]
-              log :info, "#{tag} Overwrite existing file #{req.filename}"
-            else
-              log :warn, "#{tag} Refuse to overwrite existing file #{req.filename}"
-              sock.send(Packet::ERROR.new(6, 'File already exists.').encode, 0)
-              sock.close
-              return
-            end
-          end
           mode = 'w'
           mode += 'b' if req.mode == :octet
           io = File.open(path, mode)
@@ -288,28 +278,28 @@ module TFTP
     # test it for 10K or something.
     #
     # @attr handler [Handler] Session handler
-    # @attr host    [String]  Host the sockets bind to
+    # @attr address [String]  Address to listen to
     # @attr port    [Integer] Session dispatcher port
     # @attr clients [Hash]    Current sessions
     class Base
-      attr_reader :handler, :host, :port, :clients
+      attr_reader :handler, :address, :port, :clients
 
       # Initialize the server.
       #
       # Options:
       # 
-      #  - :host   => host to bind to (default: 127.0.0.1)
-      #  - :port   => dispatcher port (default: 69)
-      #  - :logger => logger instance
+      #  - :address => address to listen to (default: '0.0.0.0')
+      #  - :port    => dispatcher port (default: 69)
+      #  - :logger  => logger instance
       #
       # @param handler  [Handler]  Initialized session handler
       # @param opts     [Hash]     Options
       def initialize(handler, opts = {})
         @handler = handler
 
-        @host = opts[:host] || '127.0.0.1'
-        @port = opts[:port] || 69
-        @logger = opts[:logger]
+        @address = opts[:address] || '0.0.0.0'
+        @port    = opts[:port] || 69
+        @logger  = opts[:logger]
 
         @clients = Hash.new
         @run = false
@@ -319,9 +309,9 @@ module TFTP
       #
       # This is obviously blocking.
       def run!
-        log :info, "UDP server loop at #{@host}:#{@port}"
+        log :info, "UDP server loop at #{@address}:#{@port}"
         @run = true
-        Socket.udp_server_loop(@host, @port) do |msg, src|
+        Socket.udp_server_loop(@address, @port) do |msg, src|
           break unless @run
 
           addr = src.remote_address
@@ -338,7 +328,7 @@ module TFTP
           log :debug, "#{tag} -> PKT: #{pkt.inspect}"
           tid = get_tid
           tag = "[#{addr.ip_address}:#{addr.ip_port.to_s.ljust(5)}:#{tid.to_s.ljust(5)}]"
-          sock = addr.connect_from(@host, tid)
+          sock = addr.connect_from(@address, tid)
           @clients[tid] = tag
 
           unless pkt.is_a?(Packet::RRQ) || pkt.is_a?(Packet::WRQ)
@@ -363,7 +353,7 @@ module TFTP
       def stop
         log :info, 'Stopping UDP server loop'
         @run = false
-        UDPSocket.new.send('break', 0, @host, @port)
+        UDPSocket.new.send('break', 0, @address, @port)
       end
 
       private

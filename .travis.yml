@@ -1,8 +1,9 @@
 language: ruby
 rvm:
-  - ruby-head
+  - 2.2.3
+  - 2.1.7
+  - 2.0.0
   - 1.9.3
-install:
-  - gem install minitest
+before_install: gem install bundler -v 1.10.6
 script:
   - rake test
