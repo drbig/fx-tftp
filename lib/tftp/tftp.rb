@@ -182,7 +182,7 @@ module TFTP
             io.write(pkt.data)
             sock.send(Packet::ACK.new(seq).encode, 0)
             break if pkt.last?
-            seq += 1
+            seq = (seq + 1) & 0xFFFF
           end
         rescue ParseError => e
           log :warn, "#{tag} Packet parse error: #{e.to_s}"
