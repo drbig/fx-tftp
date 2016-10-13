@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
 
   s.summary       = %q{Hackable and ACTUALLY WORKING pure-Ruby TFTP server}
   s.description   = %q{Got carried away a bit with the OOness of the whole thing, so while it won't be the fastest TFTP server it might be the most flexible, at least for pure-Ruby ones. With all the infastructure already in place adding a client should be a breeze, should anyone need it.}
-  s.license       = 'BSD'
+  s.license       = 'BSD-2-Clause'
   s.authors       = ['Piotr S. Staszewski']
   s.email         = 'p.staszewski@gmail.com'
   s.homepage      = 'https://github.com/drbig/fx-tftp'
