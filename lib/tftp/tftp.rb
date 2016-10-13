@@ -139,7 +139,9 @@ module TFTP
               log :warn, "#{tag} Seq mismatch: #{seq} != #{pkt.seq}"
               return
             end
-            seq = (seq + 1) & 0xFFFF #Increment with wrap around at 16 bit boundary, because of tftp block number field size limit.
+            # Increment with wrap around at 16 bit boundary,
+            # because of tftp block number field size limit.
+            seq = (seq + 1) & 0xFFFF
           end
           sock.send(Packet::DATA.new(seq, '').encode, 0) if io.size % 512 == 0
         rescue ParseError => e
